@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from django.contrib.auth.password_validation import validate_password
 
 # your files
-from .models import User
+from .models import User, HomeImage
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
@@ -40,11 +40,11 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         if User.objects.filter(email=value).exists():
             raise serializers.ValidationError('این ایمیل از قبل موجود می باشد')
         return value
+
     def validate_username(self, value):
         if User.objects.filter(username=value).exists():
             raise serializers.ValidationError('این نام کاربری از قبل موجود می باشد')
         return value
-
 
     def create(self, validated_data):
         image = validated_data.get('image')
@@ -74,7 +74,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 class UserUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['username', 'phone_number', 'image','email']
+        fields = ['username', 'phone_number', 'image', 'email']
         extra_kwargs = {
             'username': {'required': False},
             'phone_number': {'required': False},
@@ -95,4 +95,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         return value
 
 
-
+class HomeImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HomeImage
+        fields = '__all__'

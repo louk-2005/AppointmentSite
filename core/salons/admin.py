@@ -1,10 +1,8 @@
-# django files
 from django.contrib import admin
 from django.utils.html import format_html
 from django.urls import reverse
 from django.utils.safestring import mark_safe
-
-#your files
+import jdatetime
 from .models import Salon, WorkingHours, TimeSlotConfig, TimeSlot, BlockedTime, TimeSlotBlock
 
 
@@ -54,10 +52,15 @@ class SalonAdminWithInlines(SalonAdmin):
 
 @admin.register(WorkingHours)
 class WorkingHoursAdmin(admin.ModelAdmin):
-    list_display = ('salon', 'day_of_week', 'start_time', 'end_time', 'is_active')
+    list_display = ('salon', 'day_of_week', 'day_jalali', 'start_time', 'end_time', 'is_active')
     list_filter = ('salon', 'day_of_week', 'is_active')
     search_fields = ('salon__name',)
     list_editable = ('start_time', 'end_time', 'is_active')
+
+    def day_jalali(self, obj):
+        return obj.get_day_of_week_jalali()
+
+    day_jalali.short_description = "روز هفته (شمسی)"
 
 
 @admin.register(TimeSlotConfig)
@@ -70,12 +73,22 @@ class TimeSlotConfigAdmin(admin.ModelAdmin):
 @admin.register(TimeSlot)
 class TimeSlotAdmin(admin.ModelAdmin):
     list_display = (
-    'salon', 'date', 'start_time', 'end_time', 'max_capacity', 'booked_count', 'available_capacity', 'is_active',
-    'view_appointments_link')
+    'salon', 'date_jalali', 'day_of_week_jalali', 'start_time', 'end_time', 'max_capacity', 'booked_count',
+    'available_capacity', 'is_active', 'view_appointments_link')
     list_filter = ('salon', 'date', 'is_active')
     search_fields = ('salon__name', 'date')
-    readonly_fields = ('available_capacity', 'view_appointments_link')
+    readonly_fields = ('available_capacity', 'view_appointments_link', 'date_jalali', 'day_of_week_jalali')
     date_hierarchy = 'date'
+
+    def date_jalali(self, obj):
+        return obj.get_date_jalali()
+
+    date_jalali.short_description = "تاریخ (شمسی)"
+
+    def day_of_week_jalali(self, obj):
+        return obj.get_day_of_week_jalali()
+
+    day_of_week_jalali.short_description = "روز هفته (شمسی)"
 
     def available_capacity(self, obj):
         return obj.available_capacity
@@ -116,11 +129,28 @@ class TimeSlotAdmin(admin.ModelAdmin):
 
 @admin.register(BlockedTime)
 class BlockedTimeAdmin(admin.ModelAdmin):
-    list_display = ('salon', 'start_datetime', 'end_datetime', 'reason', 'created_at', 'view_affected_slots_link')
+    list_display = (
+    'salon', 'start_datetime_jalali', 'end_datetime_jalali', 'reason', 'created_at_jalali', 'view_affected_slots_link')
     list_filter = ('salon', 'created_at')
     search_fields = ('salon__name', 'reason')
-    readonly_fields = ('created_at', 'view_affected_slots_link')
+    readonly_fields = (
+    'created_at', 'view_affected_slots_link', 'start_datetime_jalali', 'end_datetime_jalali', 'created_at_jalali')
     date_hierarchy = 'start_datetime'
+
+    def start_datetime_jalali(self, obj):
+        return obj.get_start_datetime_jalali()
+
+    start_datetime_jalali.short_description = "شروع زمان مسدود (شمسی)"
+
+    def end_datetime_jalali(self, obj):
+        return obj.get_end_datetime_jalali()
+
+    end_datetime_jalali.short_description = "پایان زمان مسدود (شمسی)"
+
+    def created_at_jalali(self, obj):
+        return obj.get_created_at_jalali()
+
+    created_at_jalali.short_description = "تاریخ ایجاد (شمسی)"
 
     def view_affected_slots_link(self, obj):
         count = TimeSlot.objects.filter(
@@ -153,16 +183,21 @@ class BlockedTimeAdmin(admin.ModelAdmin):
 
 @admin.register(TimeSlotBlock)
 class TimeSlotBlockAdmin(admin.ModelAdmin):
-    list_display = ('time_slot_info', 'reason', 'created_at')
+    list_display = ('time_slot_info', 'reason', 'created_at_jalali')
     list_filter = ('time_slot__salon', 'created_at')
     search_fields = ('time_slot__salon__name', 'reason')
-    readonly_fields = ('time_slot_info', 'created_at')
+    readonly_fields = ('time_slot_info', 'created_at_jalali')
     date_hierarchy = 'created_at'
 
     def time_slot_info(self, obj):
-        return f"{obj.time_slot.salon.name} - {obj.time_slot.date} {obj.time_slot.start_time}"
+        return f"{obj.time_slot.salon.name} - {obj.time_slot.get_date_jalali()} {obj.time_slot.start_time}"
 
     time_slot_info.short_description = "تایم اسلات"
+
+    def created_at_jalali(self, obj):
+        return obj.get_created_at_jalali()
+
+    created_at_jalali.short_description = "تاریخ ایجاد (شمسی)"
 
     def has_add_permission(self, request):
         return False

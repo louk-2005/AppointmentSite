@@ -1,12 +1,11 @@
-# django files
 from django.db import models
 from django.core.exceptions import ValidationError
-
+from django.utils import timezone
 # your files
 from accounts.models import User
-
 # package files
 from datetime import datetime, timedelta
+import jdatetime
 
 
 class Salon(models.Model):
@@ -23,8 +22,13 @@ class Salon(models.Model):
     def __str__(self):
         return self.name
 
-    # salons/models.py (ادامه مدل Salon)
+    # متدهای کمکی برای تبدیل تاریخ به شمسی
+    def get_created_at_jalali(self):
+        if hasattr(self, 'created_at') and self.created_at:
+            return jdatetime.datetime.fromgregorian(datetime=self.created_at).strftime("%Y/%m/%d %H:%M")
+        return "-"
 
+    # salons/models.py (ادامه مدل Salon)
     def generate_time_slots(self, start_date, end_date):
         """
         ایجاد بازه‌های زمانی برای یک بازه تاریخ مشخص
@@ -35,29 +39,23 @@ class Salon(models.Model):
             start_datetime__date__gte=start_date,
             end_datetime__date__lte=end_date
         )
-
         current_date = start_date
         while current_date <= end_date:
             day_of_week = current_date.weekday()
-
             if day_of_week in working_hours:
                 wh = working_hours[day_of_week]
                 start_datetime = datetime.combine(current_date, wh.start_time)
                 end_datetime = datetime.combine(current_date, wh.end_time)
-
                 current_slot_start = start_datetime
                 while current_slot_start < end_datetime:
                     current_slot_end = current_slot_start + timedelta(minutes=config.interval_minutes)
-
                     if current_slot_end > end_datetime:
                         break
-
                     # بررسی اینکه آیا این تایم در بازه مسدودی قرار دارد یا خیر
                     is_blocked = any(
                         blocked.start_datetime <= current_slot_start < blocked.end_datetime
                         for blocked in blocked_times
                     )
-
                     TimeSlot.objects.update_or_create(
                         salon=self,
                         date=current_date,
@@ -68,9 +66,7 @@ class Salon(models.Model):
                             'is_active': not is_blocked
                         }
                     )
-
                     current_slot_start = current_slot_end
-
             current_date += timedelta(days=1)
 
     def block_time_range(self, start_datetime, end_datetime, reason=""):
@@ -83,7 +79,6 @@ class Salon(models.Model):
             end_datetime=end_datetime,
             reason=reason
         )
-
         # غیرفعال کردن تایم اسلات‌هایAffected
         affected_slots = self.time_slots.filter(
             date=start_datetime.date(),
@@ -91,7 +86,6 @@ class Salon(models.Model):
             start_time__lt=end_datetime.time(),
             is_active=True
         )
-
         for slot in affected_slots:
             slot.is_active = False
             slot.save()
@@ -107,7 +101,6 @@ class Salon(models.Model):
             start_datetime=start_datetime,
             end_datetime=end_datetime
         ).delete()
-
         # فعال کردن تایم اسلات‌ها در این بازه
         affected_slots = self.time_slots.filter(
             date=start_datetime.date(),
@@ -115,12 +108,13 @@ class Salon(models.Model):
             start_time__lt=end_datetime.time(),
             is_active=False
         )
-
         for slot in affected_slots:
             slot.blocks.all().delete()
             slot.is_active = True
             slot.save()
 
+
+# salons/models.py
 
 class WorkingHours(models.Model):
     DAY_CHOICES = [
@@ -132,7 +126,6 @@ class WorkingHours(models.Model):
         (5, 'پنج‌شنبه'),
         (6, 'جمعه'),
     ]
-
     salon = models.ForeignKey(
         Salon,
         on_delete=models.CASCADE,
@@ -148,6 +141,11 @@ class WorkingHours(models.Model):
 
     def __str__(self):
         return f"{self.salon.name} - {self.get_day_of_week_display()}"
+
+    # متد برای دریافت نام روز هفته به شمسی
+    def get_day_of_week_jalali(self):
+        jalali_days = ["شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنج‌شنبه", "جمعه"]
+        return jalali_days[self.day_of_week]
 
 
 class TimeSlotConfig(models.Model):
@@ -168,6 +166,8 @@ class TimeSlotConfig(models.Model):
     def __str__(self):
         return f"تنظیمات نوبت‌دهی {self.salon.name}"
 
+
+# salons/models.py
 
 class TimeSlot(models.Model):
     salon = models.ForeignKey(
@@ -203,18 +203,30 @@ class TimeSlot(models.Model):
     def is_available(self):
         return self.is_active and self.available_capacity > 0
 
-    # salons/models.py (ادامه مدل TimeSlot)
+    # متدهای کمکی برای تبدیل تاریخ به شمسی
+    def get_date_jalali(self):
+        if self.date:
+            return jdatetime.date.fromgregorian(date=self.date).strftime("%Y/%m/%d")
+        return "-"
 
+    def get_day_of_week_jalali(self):
+        if self.date:
+            # تبدیل تاریخ میلادی به شمسی
+            jalali_date = jdatetime.date.fromgregorian(date=self.date)
+            # دریافت نام روز هفته شمسی
+            jalali_days = ["شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنج‌شنبه", "جمعه"]
+            return jalali_days[jalali_date.weekday()]
+        return "-"
+
+    # salons/models.py (ادامه مدل TimeSlot)
     def block_time_slot(self, reason=""):
         """
         مسدود کردن یک تایم اسلات خاص
         """
         if not self.is_active:
             return False
-
         self.is_active = False
         self.save()
-
         TimeSlotBlock.objects.create(
             time_slot=self,
             reason=reason
@@ -227,12 +239,10 @@ class TimeSlot(models.Model):
         """
         if self.is_active:
             return False
-
         self.blocks.all().delete()
         self.is_active = True
         self.save()
         return True
-
 
 class BlockedTime(models.Model):
     salon = models.ForeignKey(
@@ -256,6 +266,22 @@ class BlockedTime(models.Model):
         if self.start_datetime >= self.end_datetime:
             raise ValidationError("زمان شروع باید قبل از زمان پایان باشد")
 
+    # متدهای کمکی برای تبدیل تاریخ به شمسی
+    def get_start_datetime_jalali(self):
+        if self.start_datetime:
+            return jdatetime.datetime.fromgregorian(datetime=self.start_datetime).strftime("%Y/%m/%d %H:%M")
+        return "-"
+
+    def get_end_datetime_jalali(self):
+        if self.end_datetime:
+            return jdatetime.datetime.fromgregorian(datetime=self.end_datetime).strftime("%Y/%m/%d %H:%M")
+        return "-"
+
+    def get_created_at_jalali(self):
+        if self.created_at:
+            return jdatetime.datetime.fromgregorian(datetime=self.created_at).strftime("%Y/%m/%d %H:%M")
+        return "-"
+
 
 class TimeSlotBlock(models.Model):
     time_slot = models.ForeignKey(
@@ -272,3 +298,9 @@ class TimeSlotBlock(models.Model):
 
     def __str__(self):
         return f"{self.time_slot} - {self.reason}"
+
+    # متد کمکی برای تبدیل تاریخ به شمسی
+    def get_created_at_jalali(self):
+        if self.created_at:
+            return jdatetime.datetime.fromgregorian(datetime=self.created_at).strftime("%Y/%m/%d %H:%M")
+        return "-"

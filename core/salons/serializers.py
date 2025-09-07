@@ -1,10 +1,6 @@
-# rest files
 from rest_framework import serializers
-
-# package files
 from datetime import datetime, timedelta
-
-# your files
+import jdatetime
 from .models import Salon, WorkingHours, TimeSlotConfig, TimeSlot, BlockedTime, TimeSlotBlock
 
 
@@ -21,10 +17,11 @@ class SalonSerializer(serializers.ModelSerializer):
 
 class WorkingHoursSerializer(serializers.ModelSerializer):
     day_display = serializers.CharField(source='get_day_of_week_display', read_only=True)
+    day_jalali = serializers.CharField(source='get_day_of_week_jalali', read_only=True)
 
     class Meta:
         model = WorkingHours
-        fields = ['id', 'salon', 'day_of_week', 'day_display', 'start_time', 'end_time', 'is_active']
+        fields = ['id', 'salon', 'day_of_week', 'day_display', 'day_jalali', 'start_time', 'end_time', 'is_active']
         extra_kwargs = {
             'salon': {'write_only': True}
         }
@@ -43,45 +40,69 @@ class TimeSlotSerializer(serializers.ModelSerializer):
     salon_name = serializers.CharField(source='salon.name', read_only=True)
     available_capacity = serializers.IntegerField(read_only=True)
     is_available = serializers.BooleanField(read_only=True)
+    date_jalali = serializers.SerializerMethodField()
+    day_of_week_jalali = serializers.SerializerMethodField()
 
     class Meta:
         model = TimeSlot
         fields = [
-            'id', 'salon', 'salon_name', 'date', 'start_time', 'end_time',
+            'id', 'salon', 'salon_name', 'date', 'date_jalali', 'start_time', 'end_time',
             'max_capacity', 'booked_count', 'available_capacity',
-            'is_active', 'is_available'
+            'is_active', 'is_available', 'day_of_week_jalali'
         ]
         extra_kwargs = {
             'salon': {'write_only': True}
         }
+
+    def get_date_jalali(self, obj):
+        return obj.get_date_jalali()
+
+    def get_day_of_week_jalali(self, obj):
+        return obj.get_day_of_week_jalali()
 
 
 class BlockedTimeSerializer(serializers.ModelSerializer):
     salon_name = serializers.CharField(source='salon.name', read_only=True)
+    start_datetime_jalali = serializers.SerializerMethodField()
+    end_datetime_jalali = serializers.SerializerMethodField()
+    created_at_jalali = serializers.SerializerMethodField()
 
     class Meta:
         model = BlockedTime
         fields = [
-            'id', 'salon', 'salon_name', 'start_datetime', 'end_datetime',
-            'reason', 'created_at'
+            'id', 'salon', 'salon_name', 'start_datetime', 'start_datetime_jalali',
+            'end_datetime', 'end_datetime_jalali', 'reason', 'created_at', 'created_at_jalali'
         ]
         extra_kwargs = {
             'salon': {'write_only': True}
         }
 
+    def get_start_datetime_jalali(self, obj):
+        return obj.get_start_datetime_jalali()
+
+    def get_end_datetime_jalali(self, obj):
+        return obj.get_end_datetime_jalali()
+
+    def get_created_at_jalali(self, obj):
+        return obj.get_created_at_jalali()
+
 
 class TimeSlotBlockSerializer(serializers.ModelSerializer):
     time_slot_info = serializers.SerializerMethodField()
+    created_at_jalali = serializers.SerializerMethodField()
 
     class Meta:
         model = TimeSlotBlock
-        fields = ['id', 'time_slot', 'time_slot_info', 'reason', 'created_at']
+        fields = ['id', 'time_slot', 'time_slot_info', 'reason', 'created_at', 'created_at_jalali']
         extra_kwargs = {
             'time_slot': {'write_only': True}
         }
 
     def get_time_slot_info(self, obj):
-        return f"{obj.time_slot.salon.name} - {obj.time_slot.date} {obj.time_slot.start_time}"
+        return f"{obj.time_slot.salon.name} - {obj.time_slot.get_date_jalali()} {obj.time_slot.start_time}"
+
+    def get_created_at_jalali(self, obj):
+        return obj.get_created_at_jalali()
 
 
 class SalonDetailSerializer(serializers.ModelSerializer):

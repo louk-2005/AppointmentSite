@@ -1,7 +1,10 @@
+#django files
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils.html import mark_safe
-from .models import User
+
+#your files
+from .models import User, HomeImage
 
 
 class AccountsUserAdmin(UserAdmin):
@@ -139,3 +142,5 @@ class AccountsUserAdmin(UserAdmin):
 
 
 admin.site.register(User, AccountsUserAdmin)
+
+admin.site.register(HomeImage)

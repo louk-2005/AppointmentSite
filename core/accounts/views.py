@@ -5,11 +5,11 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.permissions import IsAdminUser
 # your files
-from .models import User
+from .models import User, HomeImage
 from .serializers import (
     UserRegisterSerializer,
     UserProfileSerializer,
-    UserUpdateSerializer
+    UserUpdateSerializer, HomeImageSerializer
 )
 
 
@@ -46,3 +46,7 @@ class UserViewSet(viewsets.ViewSet):
         users = User.objects.all()
         serializer = UserProfileSerializer(users, many=True)
         return Response(serializer.data)
+
+class HomeImageViewSet(viewsets.ModelViewSet):
+    queryset = HomeImage.objects.all()
+    serializer_class = HomeImageSerializer
