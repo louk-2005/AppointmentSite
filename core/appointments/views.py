@@ -2,7 +2,7 @@
 from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 # django files
 from django_filters.rest_framework import DjangoFilterBackend
@@ -25,16 +25,16 @@ from .permissions import (
 class ServiceViewSet(viewsets.ModelViewSet):
     queryset = Service.objects.all()
     serializer_class = ServiceSerializer
-    permission_classes = [IsAuthenticated, IsSalonManager]
+    permission_classes = [ AllowAny]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['salon']
     search_fields = ['name', 'description']
 
-    def get_queryset(self):
-        # مدیر فقط می‌تواند خدمات آرایشگاه خود را ببیند
-        return Service.objects.filter(
-            salon__managed_salons__manager=self.request.user
-        )
+    # def get_queryset(self):
+    #     # مدیر فقط می‌تواند خدمات آرایشگاه خود را ببیند
+    #     return Service.objects.filter(
+    #         salon__managed_salons__manager=self.request.user
+    #     )
 
     def perform_create(self, serializer):
         # تنظیم خودکار آرایشگاه بر اساس مدیر

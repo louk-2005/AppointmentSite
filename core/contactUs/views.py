@@ -5,10 +5,10 @@ from rest_framework import status, viewsets, generics
 from rest_framework.decorators import action as Action
 from rest_framework.response import Response
 # your files
-from .models import  ContactInfo, SocialLink, Honors, License
+from .models import ContactInfo, SocialLink, Honors, License, Location,CommunicationWithUs
 from .serializers import (
     ContactInfoSerializer,
-    SocialLinkSerializer, HonorsSerializer, LicenseSerializer,
+    SocialLinkSerializer, HonorsSerializer, LicenseSerializer, LocationSerializer,CommunicationWithUsSerializer
 )
 
 
@@ -39,5 +39,13 @@ class HonorViewSet(viewsets.ModelViewSet):
 class LicenseViewSet(viewsets.ModelViewSet):
     queryset = License.objects.all()
     serializer_class = LicenseSerializer
+
+class LocationViewSet(viewsets.ModelViewSet):
+    queryset = Location.objects.all()
+    serializer_class = LocationSerializer
+
+class CommunicationWithUsViewSet(viewsets.ModelViewSet):
+    queryset = CommunicationWithUs.objects.all()
+    serializer_class = CommunicationWithUsSerializer
 
 

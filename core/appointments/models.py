@@ -21,6 +21,7 @@ class Service(models.Model):
         decimal_places=2,
         verbose_name="قیمت"
     )
+    show = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name

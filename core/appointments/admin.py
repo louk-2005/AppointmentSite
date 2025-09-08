@@ -10,9 +10,9 @@ from .models import Service, Appointment
 
 @admin.register(Service)
 class ServiceAdmin(admin.ModelAdmin):
-    list_display = ('name', 'salon', 'duration', 'price', 'view_appointments_link')
+    list_display = ('name', 'salon', 'duration', 'price', 'view_appointments_link', 'show')
     list_filter = ('salon',)
-    search_fields = ('name', 'description', 'salon__name')
+    search_fields = ('name', 'description', 'salon__name', 'show')
     list_editable = ('duration', 'price')
 
     def view_appointments_link(self, obj):

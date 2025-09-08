@@ -99,3 +99,4 @@ class HomeImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = HomeImage
         fields = '__all__'
+

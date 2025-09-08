@@ -62,3 +62,4 @@ class HomeImage(models.Model):
                 resized_img.save(image_path, format=format, quality=95)
         except Exception as e:
             print(f"Error resizing image: {e}")
+
