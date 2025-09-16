@@ -28,7 +28,7 @@ class ServiceViewSet(viewsets.ModelViewSet):
     permission_classes = [ AllowAny]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['salon']
-    search_fields = ['name', 'description']
+    search_fields = ['name',]
 
     # def get_queryset(self):
     #     # مدیر فقط می‌تواند خدمات آرایشگاه خود را ببیند

@@ -15,6 +15,7 @@ class Service(models.Model):
     )
     name = models.CharField(max_length=100, verbose_name="نام خدمت")
     description = models.TextField(verbose_name="توضیحات")
+    image = models.ImageField(default='service/default.png', upload_to='service', blank=True, null=True)
     duration = models.DurationField(verbose_name="مدت زمان")
     price = models.DecimalField(
         max_digits=10,
@@ -22,6 +23,7 @@ class Service(models.Model):
         verbose_name="قیمت"
     )
     show = models.BooleanField(default=False)
+
 
     def __str__(self):
         return self.name

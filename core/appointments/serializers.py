@@ -14,7 +14,7 @@ class ServiceSerializer(serializers.ModelSerializer):
         model = Service
         fields = [
             'id', 'salon', 'salon_name', 'name', 'description',
-            'duration', 'duration_minutes', 'price', 'show'
+            'duration', 'duration_minutes', 'price', 'show', 'image'
         ]
         extra_kwargs = {
             'salon': {'write_only': True}
