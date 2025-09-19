@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 
 # django files
 from django_filters.rest_framework import DjangoFilterBackend
-
+from django.db.models import F, ExpressionWrapper, IntegerField
 # your files
 from .models import Service, Appointment
 from .serializers import (
@@ -171,11 +171,17 @@ class AppointmentViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        # محاسبه ظرفیت آزاد مستقیم در دیتابیس
         slots = TimeSlot.objects.filter(
             salon_id=salon_id,
             date=date_obj,
             is_active=True
-        ).filter(available_capacity__gt=0)
+        ).annotate(
+            available_capacity_db=ExpressionWrapper(
+                F('max_capacity') - F('booked_count'),
+                output_field=IntegerField()
+            )
+        ).filter(available_capacity_db__gt=0)
 
         from salons.serializers import TimeSlotSerializer
         serializer = TimeSlotSerializer(slots, many=True)

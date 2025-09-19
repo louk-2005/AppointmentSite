@@ -17,7 +17,7 @@ from .permissions import IsSalonManager, IsSalonStaff
 class SalonViewSet(viewsets.ModelViewSet):
     queryset = Salon.objects.all()
     serializer_class = SalonSerializer
-    permission_classes = [IsAuthenticated, IsSalonManager]
+    permission_classes = [IsAuthenticated,]
     filter_backends = [filters.SearchFilter]
     search_fields = ['name', 'address']
 
@@ -26,9 +26,9 @@ class SalonViewSet(viewsets.ModelViewSet):
             return SalonDetailSerializer
         return SalonSerializer
 
-    def get_queryset(self):
-        # مدیر فقط آرایشگاه‌های خود را می‌بیند
-        return Salon.objects.filter(manager=self.request.user)
+    # def get_queryset(self):
+    #     # مدیر فقط آرایشگاه‌های خود را می‌بیند
+    #     return Salon.objects.filter(manager=self.request.user)
 
     def perform_create(self, serializer):
         serializer.save(manager=self.request.user)

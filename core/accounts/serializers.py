@@ -46,6 +46,11 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('این نام کاربری از قبل موجود می باشد')
         return value
 
+    def validate_phone_number(self, value):
+        # Only validate if phone number is provided
+        if value and User.objects.filter(phone_number=value).exists():
+            raise serializers.ValidationError('این شماره تلفن از قبل موجود می باشد')
+        return value
     def create(self, validated_data):
         image = validated_data.get('image')
         if not image:

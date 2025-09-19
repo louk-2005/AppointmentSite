@@ -16,7 +16,7 @@ router = DefaultRouter()
 router.register(r'salons', SalonViewSet)
 router.register(r'working-hours', WorkingHoursViewSet)
 router.register(r'time-slot-configs', TimeSlotConfigViewSet)
-router.register(r'time-slots', TimeSlotViewSet)
+router.register(r'timeslots', TimeSlotViewSet)
 router.register(r'blocked-times', BlockedTimeViewSet)
 router.register(r'time-slot-blocks', TimeSlotBlockViewSet)
 
